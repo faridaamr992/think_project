@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
+from typing import Optional, Dict,List
 from datetime import datetime
 
 
@@ -16,3 +16,9 @@ class DocumentRead(DocumentCreate):
 class DocumentUpdate(BaseModel):
     content: Optional[str] = None
     metadata: Optional[Dict] = None
+
+class UploadSchema(BaseModel):
+    id: str
+    content: str
+    metadata: dict
+    embedding: List[float]

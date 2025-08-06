@@ -7,7 +7,9 @@ class Settings(BaseSettings):
 
     QDRANT_HOST: str
     QDRANT_PORT: int
-    
+
+    COHERE_API_KEY: str
+
 
     class Config:
         env_file = ".env"
