@@ -24,9 +24,9 @@ class MongoRepository:
         self._db = db
         self._collection: AsyncIOMotorCollection = db[MongoConstants.COLLECTION_NAME]
 
-    # -----------------------------------------
+    # ----------------------------
     # Document-level operations
-    # -----------------------------------------
+    # ----------------------------
 
     async def insert_document(self, document: DocumentCreate) -> str:
         """
@@ -119,6 +119,13 @@ class MongoRepository:
             field (str): The field to index (default is "content").
         """
         await self._collection.create_index([(field, "text")])
+
+    async def insert_many(self, docs: List[Dict]):
+        try:
+            await self._collection.insert_many(docs)
+        except Exception as e:
+            raise Exception(f"Mongo insert_many failed: {e}")
+
 
     # -----------------------------------------
     # Collection-level operations

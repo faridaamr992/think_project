@@ -1,9 +1,9 @@
-from typing import List
+from typing import List,Dict
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter
 from app.clients.qdrant_client import QdrantClient
 from app.models.upload_schemas import UploadSchema
 from app.constant_manager import QdrantConstants
-
+from app.utils.chunking import simple_chunk_text
 
 class QdrantRepository:
     """
@@ -19,18 +19,43 @@ class QdrantRepository:
         Args:
             qdrant_client (QdrantClient): The initialized Qdrant client wrapper.
         """
+        self.qdrant_client = qdrant_client
         self.qdrant = qdrant_client.get_client()
+
+    async def count(self) -> int:
+            """
+            Returns the total number of vectors stored in the collection.
+            Compatible with older Qdrant client versions.
+            """
+            try:
+                result = await self.qdrant.count(
+                    collection_name=QdrantConstants.COLLECTION_NAME.value,
+                    exact=True
+                )
+                return result.count
+            except Exception as e:
+                print(f"[ERROR] Failed to count vectors: {e}")
+                return -1
+
+
 
     async def create_collection(self):
         """
-        Creates a Qdrant collection if it doesn't already exist.
-        Uses cosine distance with a vector size of 384 (Cohere default).
+        Creates or recreates the Qdrant collection with the specified parameters.
         """
-        if not await self.qdrant.collection_exists(QdrantConstants.COLLECTION_NAME.value):
-            await self.qdrant.create_collection(
-                collection_name=QdrantConstants.COLLECTION_NAME.value,
-                vectors_config=VectorParams(size=QdrantConstants.VECTOR_DIM.value, distance=QdrantConstants.DISTANCE_COS.value),
+        collections = await self.qdrant.get_collections()
+        existing = QdrantConstants.COLLECTION_NAME.value in [c.name for c in collections.collections]
+
+        if existing:
+            await self.qdrant.delete_collection(QdrantConstants.COLLECTION_NAME.value)
+
+        await self.qdrant.recreate_collection(
+            collection_name=QdrantConstants.COLLECTION_NAME.value,
+            vectors_config=VectorParams(
+                size=QdrantConstants.VECTOR_DIM.value,
+                distance=Distance.COSINE,
             )
+        )
 
     async def insert_documents(self, docs: List[UploadSchema]):
         """
@@ -52,19 +77,79 @@ class QdrantRepository:
             points=points
         )
 
-    async def search(self, query_vector: List[float], limit: int = 5):
+    from qdrant_client.models import ScoredPoint
+
+    async def search(self, query_vector: List[float], limit: int = 5) -> List[ScoredPoint]:
         """
         Performs a semantic search in the Qdrant collection using the query vector.
 
         Args:
-            query_vector (List[float]): The embedding vector to search against.
-            limit (int, optional): The maximum number of results to return. Defaults to 5.
+            query_vector (List[float]): The query embedding
+            limit (int): Maximum number of results to return
 
         Returns:
-            List[ScoredPoint]: A list of the closest matching documents.
+            List[ScoredPoint]: A list of documents with payloads (content + metadata).
         """
-        return await self.qdrant.search(
-            collection_name=QdrantConstants.COLLECTION_NAME.value,
-            query_vector=query_vector,
-            limit=limit,
-        )
+        try:
+            results = await self.qdrant.search(
+                collection_name=QdrantConstants.COLLECTION_NAME.value,
+                query_vector=query_vector,
+                limit=limit,
+                with_payload=True,
+                #score_threshold=0.7  # Add threshold to filter low-quality matches
+            )
+
+            # Results are already ScoredPoint objects, return them directly
+            return results
+
+        except Exception as e:
+            #logging.error(f"Search failed: {str(e)}")
+            raise Exception(f"Qdrant search failed: {str(e)}")
+        
+
+
+    
+
+
+    async def insert_many(self, vectors: List[Dict]):
+        """
+        Insert multiple vectors into Qdrant.
+        
+        Args:
+            vectors (List[Dict]): List of vectors with id, vector, and payload
+        """
+        try:
+            collection_name = QdrantConstants.COLLECTION_NAME.value
+
+            # Check if collection exists
+            exists = await self.qdrant.collection_exists(collection_name)
+            if not exists:
+                print(f"[INFO] Collection '{collection_name}' not found. Creating it...")
+
+                # Determine vector size from first item
+                vector_size = len(vectors[0]["vector"])
+                await self.qdrant.create_collection(
+                    collection_name=collection_name,
+                    vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+                )
+                print(f"[INFO] Collection '{collection_name}' created.")
+
+            # Prepare points
+            points = [
+                PointStruct(
+                    id=item["id"],
+                    vector=item["vector"],
+                    payload=item["payload"]
+                )
+                for item in vectors
+            ]
+
+            # Upsert points
+            await self.qdrant.upsert(
+                collection_name=collection_name,
+                points=points
+            )
+
+        except Exception as e:
+            print(f"[ERROR] Qdrant insert_many failed: {e}")
+            raise Exception(f"Qdrant insert_many failed: {e}")

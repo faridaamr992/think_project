@@ -2,7 +2,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from app.config import settings
 
 
-class MongoClient(settings):
+class MongoClient():
     """
     Handles connection to MongoDB and returns database client.
     """
@@ -22,7 +22,7 @@ class MongoClient(settings):
         """
         self._client.close()
 
-    def get_database(self, db_name: str):
+    def get_db(self, db_name: str):
         """
         Returns a MongoDB database instance.
 
