@@ -3,7 +3,7 @@ from app.config import settings
 from app.constant_manager import CohereConstants
 
 
-class CohereClient(settings):
+class CohereClient():
     """
     Wrapper for the Cohere client to generate text embeddings.
     """
@@ -14,7 +14,7 @@ class CohereClient(settings):
         """
         self._client = cohere.Client(api_key=settings.COHERE_API_KEY)
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    async def embed_texts(self, texts: list[str]) -> list[list[float]]:
         """
         Generates embeddings for a list of input texts.
 

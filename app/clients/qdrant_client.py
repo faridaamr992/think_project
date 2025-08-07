@@ -2,7 +2,7 @@ from qdrant_client import AsyncQdrantClient
 from app.config import settings
 
 
-class QdrantClient(settings):
+class QdrantClient():
     """
     Asynchronous client manager for connecting to the Qdrant vector database.
     """
