@@ -14,7 +14,7 @@ class MongoRepository:
     execute full-text search, and manage collections such as listing and dropping.
     """
 
-    def __init__(self, client: MongoClient):
+    def __init__(self, client: MongoClient, collection_name):
         """
         Initialize the repository with a MongoDB database instance.
 
@@ -22,7 +22,7 @@ class MongoRepository:
             client(MongoClient): Costum Wrapper.
         """
         self._db = client.get_client()  
-        self._collection = self._db[MongoConstants.COLLECTION_NAME]
+        self._collection = self._db[collection_name]
 
         
     # ----------------------------
