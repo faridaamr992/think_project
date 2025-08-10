@@ -8,11 +8,12 @@ class CohereClient():
     Wrapper for the Cohere client to generate text embeddings.
     """
 
-    def __init__(self):
+    def __init__(self,api_key):
         """
         Initializes the Cohere client using the API key from environment settings.
         """
-        self._client = cohere.Client(api_key=settings.COHERE_API_KEY)
+        self.api_key=api_key
+        self._client = cohere.Client(api_key=self.api_key)
 
     async def embed_texts(self, texts: list[str]) -> list[list[float]]:
         """

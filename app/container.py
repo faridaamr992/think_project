@@ -17,7 +17,7 @@ class Container:
             host=settings.QDRANT_HOST,
             port=settings.QDRANT_PORT
         )
-        self.cohere_client = CohereClient()
+        self.cohere_client = CohereClient(api_key=settings.COHERE_API_KEY)
 
         # Repositories
         self.mongo_repo = MongoRepository(
