@@ -10,6 +10,10 @@ class Settings(BaseSettings):
 
     COHERE_API_KEY: str
 
+    SECRET_KEY : str  
+    ALGORITHM : str
+    ACCESS_TOKEN_EXPIRE_MINUTES : int 
+
 
     class Config:
         env_file = ".env" 

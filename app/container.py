@@ -7,6 +7,9 @@ from app.repository.vdb_repository import QdrantRepository
 from app.constant_manager import MongoConstants
 from app.service.upload_service import UploadService
 from app.service.search_service import SearchService
+from app.repository.auth_repository import AuthRepository
+from app.service.register_service import RegisterService
+from app.service.login_service import LoginService
 from app.config import settings
 
 class Container:
@@ -21,7 +24,7 @@ class Container:
 
         # Repositories
         self.mongo_repo = MongoRepository(
-            self.mongo_client
+            self.mongo_client,collection_name=MongoConstants.COLLECTION_NAME.value
         )
         self.qdrant_repo = QdrantRepository(
             self.qdrant_client.get_client()
@@ -34,6 +37,10 @@ class Container:
         self.search_service = SearchService(
             self.mongo_repo, self.qdrant_repo, self.cohere_client
         )
+
+        self.auth_repo = AuthRepository(self.mongo_client)
+        self.register_service = RegisterService(self.auth_repo)
+        self.login_service = LoginService(self.auth_repo)
 
 
 container = Container()
