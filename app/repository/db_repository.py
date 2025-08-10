@@ -24,9 +24,7 @@ class MongoRepository:
         self._db = client.get_client()  
         self._collection = self._db[MongoConstants.COLLECTION_NAME]
 
-
         
-
     # ----------------------------
     # Document-level operations
     # ----------------------------
