@@ -1,7 +1,7 @@
 from typing import Optional
 from app.models.upload_schemas import DocumentCreate, UploadSchema
-from app.repository.mongo_repository import MongoRepository
-from app.repository.qdrant_repository import QdrantRepository
+from app.repository.db_repository import MongoRepository
+from app.repository.vdb_repository import QdrantRepository
 from app.clients.cohere_client import CohereClient
 from app.utils.chunking import simple_chunk_text
 from uuid import uuid4
@@ -20,6 +20,8 @@ class UploadService:
 
     async def upload_document(self, doc: DocumentCreate):
         try:
+            #create index
+            await self.mongo_repo.create_text_index()
             # Step 1: Generate document ID and get metadata
             document_id = str(uuid4())
             title = doc.metadata.get("title", "Untitled")

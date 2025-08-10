@@ -21,6 +21,7 @@ class QdrantRepository:
         """
         self.qdrant_client = qdrant_client
         self.qdrant = qdrant_client.get_client()
+        
 
     async def count(self) -> int:
             """

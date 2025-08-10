@@ -23,6 +23,8 @@ class MongoRepository:
         """
         self._db = db
         self._collection: AsyncIOMotorCollection = db[MongoConstants.COLLECTION_NAME]
+    
+        
 
     # ----------------------------
     # Document-level operations
