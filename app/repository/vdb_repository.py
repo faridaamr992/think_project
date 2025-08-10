@@ -1,6 +1,7 @@
 from typing import List,Dict
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter
 from app.clients.qdrant_client import QdrantClient
+from qdrant_client import AsyncQdrantClient
 from app.models.upload_schemas import UploadSchema
 from app.constant_manager import QdrantConstants
 from app.utils.chunking import simple_chunk_text
@@ -12,15 +13,14 @@ class QdrantRepository:
     inserting points, and performing similarity search.
     """
 
-    def __init__(self, qdrant_client: QdrantClient):
+    def __init__(self, qdrant: AsyncQdrantClient):
         """
         Initializes the repository with a connected Qdrant client.
 
         Args:
             qdrant_client (QdrantClient): The initialized Qdrant client wrapper.
         """
-        self.qdrant_client = qdrant_client
-        self.qdrant = qdrant_client.get_client()
+        self.qdrant = qdrant
         
 
     async def count(self) -> int:

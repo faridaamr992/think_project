@@ -24,7 +24,7 @@ class Container:
             self.mongo_client.get_client(MongoConstants.DB_NAME.value)
         )
         self.qdrant_repo = QdrantRepository(
-            qdrant_client=self.qdrant_client
+            self.qdrant_client.get_client()
         )
 
         # Services
