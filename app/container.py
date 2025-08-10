@@ -12,7 +12,7 @@ from app.config import settings
 class Container:
     def __init__(self):
         # Clients (parameters injected)
-        self.mongo_client = MongoClient(uri=settings.MONGO_URI)
+        self.mongo_client = MongoClient(uri=settings.MONGO_URI,db_name=MongoConstants.DB_NAME.value)
         self.qdrant_client = QdrantClient(
             host=settings.QDRANT_HOST,
             port=settings.QDRANT_PORT
@@ -21,7 +21,7 @@ class Container:
 
         # Repositories
         self.mongo_repo = MongoRepository(
-            self.mongo_client.get_client(MongoConstants.DB_NAME.value)
+            self.mongo_client
         )
         self.qdrant_repo = QdrantRepository(
             self.qdrant_client.get_client()

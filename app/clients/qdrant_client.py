@@ -18,7 +18,7 @@ class QdrantClient:
                 port=self._port,
             )
 
-    def get_client(self) -> AsyncQdrantClient:
+    def get_client(self) :
         """
         Returns the internal Qdrant client instance, lazily initializing it.
         """
