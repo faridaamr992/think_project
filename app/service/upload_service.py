@@ -5,6 +5,13 @@ from app.repository.vdb_repository import QdrantRepository
 from app.clients.cohere_client import CohereClient
 from app.utils.chunking import simple_chunk_text
 from uuid import uuid4
+import json
+from uuid import uuid4
+from typing import Optional
+from fastapi import UploadFile, HTTPException
+from app.models.upload_schemas import DocumentCreate
+from app.utils.chunking import simple_chunk_text
+
 
 
 class UploadService:
@@ -17,6 +24,53 @@ class UploadService:
         self.mongo_repo = mongo_repo
         self.qdrant_repo = qdrant_repo
         self.cohere_client = cohere_client
+
+    async def prepare_document(self, file: UploadFile, metadata: Optional[str]) -> DocumentCreate:
+        """Read file, validate, parse metadata, and return DocumentCreate."""
+        
+        # File size check
+        if hasattr(file, "size") and file.size and file.size > 1_000_000:
+            raise HTTPException(status_code=413, detail="File too large. Max 1MB.")
+
+        # Read and decode
+        content_bytes = b""
+        chunk_size = 8192
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            content_bytes += chunk
+
+        try:
+            content_str = content_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="File must be UTF-8 encoded text")
+        finally:
+            await file.close()
+
+        # Validate content length
+        if len(content_str) < 10:
+            raise HTTPException(status_code=400, detail="File content too short")
+
+        # Parse metadata
+        metadata_dict = {}
+        if metadata:
+            try:
+                metadata_dict = json.loads(metadata)
+                if not isinstance(metadata_dict, dict):
+                    raise ValueError()
+            except (json.JSONDecodeError, ValueError):
+                raise HTTPException(status_code=400, detail="Invalid metadata JSON")
+
+        # Create and return DocumentCreate
+        return DocumentCreate(
+            content=content_str,
+            metadata={
+                **metadata_dict,
+                "filename": file.filename,
+                "content_type": file.content_type
+            }
+        )
 
     async def upload_document(self, doc: DocumentCreate):
         try:
