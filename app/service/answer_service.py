@@ -14,7 +14,8 @@ class AnswerService:
         search_request = SearchRequest(
             query=request.query,
             search_type=request.search_type,
-            top_k=request.top_k
+            top_k=request.top_k,
+            file_id=request.file_id
         )
 
         # Step 2: Retrieve documents using SearchService

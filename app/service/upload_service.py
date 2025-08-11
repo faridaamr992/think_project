@@ -78,7 +78,8 @@ class UploadService:
             await self.mongo_repo.create_text_index()
             # Step 1: Generate document ID and get metadata
             document_id = str(uuid4())
-            title = doc.metadata.get("title", "Untitled")
+            title = doc.metadata.get("title") or doc.metadata.get("filename") or "Untitled"
+            file_name = doc.metadata.get("filename") or "unknown_filename.ext"
             print("*****************************step1")
 
             # Step 2: Chunk text
@@ -101,27 +102,32 @@ class UploadService:
 
                 # MongoDB document
                 documents_to_insert.append({
-                    "content": chunk,
-                    "metadata": {
-                        "title": title,
-                        "chunk_index": i,
-                        "document_id": document_id
-                    }
-                })
+                            "content": chunk,
+                            "metadata": {
+                                "title": title,
+                                "filename": file_name,
+                                "chunk_index": i,
+                                "document_id": document_id,
+                                "file_id": document_id  
+                            }
+                        })
 
                 # Qdrant point - THIS IS THE KEY CHANGE
                 embeddings_to_insert.append({
-                    "id": chunk_id,
-                    "vector": vector,
-                    "payload": {
-                        "content": chunk,  # Store the actual content!
-                        "metadata": {
-                            "title": title,
-                            "chunk_index": i,
-                            "document_id": document_id
-                        }
-                    }
-                })
+                            "id": chunk_id,
+                            "vector": vector,
+                            "payload": {
+                                "file_id": document_id,     # Top-level key
+                                "content": chunk,
+                                "metadata": {
+                                    "title": title,
+                                    "filename": file_name,
+                                    "chunk_index": i,
+                                    "document_id": document_id,
+                                }
+                            }
+                        })
+
 
             # Insert into MongoDB
             await self.mongo_repo.insert_many(documents_to_insert)

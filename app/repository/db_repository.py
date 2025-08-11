@@ -23,6 +23,7 @@ class MongoRepository:
         """
         self._db = client.get_client()  
         self._collection = self._db[collection_name]
+        #self._files_collection = self._db["files"]
 
         
     # ----------------------------
@@ -90,19 +91,16 @@ class MongoRepository:
         result = await self._collection.delete_one({"_id": ObjectId(doc_id)})
         return result.deleted_count > 0
 
-    async def full_text_search(self, query: str, top_k: int = 5) -> List[DocumentRead]:
+    async def full_text_search(self, query: str, top_k: int = 5, file_filter: dict = None) -> List[DocumentRead]:
         """
-        Perform a full-text search on the 'content' field.
-
-        Args:
-            query (str): The text query to search for.
-            top_k (int): Maximum number of results to return.
-
-        Returns:
-            List[DocumentRead]: A list of matched documents.
+        Perform a full-text search on the 'content' field, optionally filtering by file_id.
         """
+        filter_query = {"$text": {"$search": query}}
+        if file_filter:
+            filter_query.update(file_filter)
+
         cursor = self._collection.find(
-            {"$text": {"$search": query}},
+            filter_query,
             {"score": {"$meta": "textScore"}}
         ).sort([("score", {"$meta": "textScore"})]).limit(top_k)
 
@@ -111,6 +109,7 @@ class MongoRepository:
             doc["_id"] = str(doc["_id"])
             results.append(DocumentRead(**doc))
         return results
+
 
     async def create_text_index(self, field: str = "content") -> None:
         """
@@ -126,6 +125,32 @@ class MongoRepository:
             await self._collection.insert_many(docs)
         except Exception as e:
             raise Exception(f"Mongo insert_many failed: {e}")
+        
+    async def list_documents(self):
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$metadata.document_id",
+                    "filename": {"$first": "$metadata.filename"},
+                    "chunks": {"$sum": 1}
+                }
+            },
+            {
+                "$project": {
+                    "id": "$_id",
+                    "name": "$filename",
+                    "chunks": 1,
+                    "_id": 0
+                }
+            }
+        ]
+        cursor = self._collection.aggregate(pipeline)
+        results = []
+        async for doc in cursor:
+            results.append(doc)
+        return results
+
+
 
 
     # -----------------------------------------

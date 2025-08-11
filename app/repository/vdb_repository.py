@@ -5,6 +5,7 @@ from qdrant_client import AsyncQdrantClient
 from app.models.upload_schemas import UploadSchema
 from app.constant_manager import QdrantConstants
 from app.utils.chunking import simple_chunk_text
+from qdrant_client.models import ScoredPoint
 
 class QdrantRepository:
     """
@@ -78,38 +79,34 @@ class QdrantRepository:
             points=points
         )
 
-    from qdrant_client.models import ScoredPoint
+    
 
-    async def search(self, query_vector: List[float], limit: int = 5) -> List[ScoredPoint]:
+    async def search(self, query_vector: List[float], limit: int = 5, file_filter: dict = None) -> List[ScoredPoint]:
         """
-        Performs a semantic search in the Qdrant collection using the query vector.
-
-        Args:
-            query_vector (List[float]): The query embedding
-            limit (int): Maximum number of results to return
-
-        Returns:
-            List[ScoredPoint]: A list of documents with payloads (content + metadata).
+        Performs a semantic search in the Qdrant collection using the query vector,
+        optionally filtering by file_id.
         """
         try:
+            query_filter = None
+            if file_filter:
+                query_filter = {
+                    "must": [
+                        {"key": "metadata.file_id", "match": {"value": str(file_filter["file_id"])}}
+                    ]
+                }
+
             results = await self.qdrant_client.search(
                 collection_name=QdrantConstants.COLLECTION_NAME.value,
                 query_vector=query_vector,
                 limit=limit,
                 with_payload=True,
-                #score_threshold=0.7  # Add threshold to filter low-quality matches
+                query_filter=query_filter
             )
-
-            # Results are already ScoredPoint objects, return them directly
             return results
 
         except Exception as e:
-            #logging.error(f"Search failed: {str(e)}")
             raise Exception(f"Qdrant search failed: {str(e)}")
-        
 
-
-    
 
 
     async def insert_many(self, vectors: List[Dict]):
