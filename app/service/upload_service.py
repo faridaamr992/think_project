@@ -11,7 +11,7 @@ from typing import Optional
 from fastapi import UploadFile, HTTPException
 from app.models.upload_schemas import DocumentCreate
 from app.utils.chunking import simple_chunk_text
-from constant_manager import CohereConstants
+from app.constant_manager import CohereConstants
 
 
 class UploadService:
