@@ -1,6 +1,7 @@
 from typing import List,Dict
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter
 from app.clients.qdrant_client import QdrantClient
+from qdrant_client import AsyncQdrantClient
 from app.models.upload_schemas import UploadSchema
 from app.constant_manager import QdrantConstants
 from app.utils.chunking import simple_chunk_text
@@ -20,7 +21,7 @@ class QdrantRepository:
             qdrant_client (QdrantClient): The initialized Qdrant client wrapper.
         """
         self.qdrant_client = qdrant_client
-        self.qdrant = qdrant_client.get_client()
+        
 
     async def count(self) -> int:
             """
@@ -28,7 +29,7 @@ class QdrantRepository:
             Compatible with older Qdrant client versions.
             """
             try:
-                result = await self.qdrant.count(
+                result = await self.qdrant_client.count(
                     collection_name=QdrantConstants.COLLECTION_NAME.value,
                     exact=True
                 )
@@ -43,13 +44,13 @@ class QdrantRepository:
         """
         Creates or recreates the Qdrant collection with the specified parameters.
         """
-        collections = await self.qdrant.get_collections()
+        collections = await self.qdrant_client.get_collections()
         existing = QdrantConstants.COLLECTION_NAME.value in [c.name for c in collections.collections]
 
         if existing:
-            await self.qdrant.delete_collection(QdrantConstants.COLLECTION_NAME.value)
+            await self.qdrant_client.delete_collection(QdrantConstants.COLLECTION_NAME.value)
 
-        await self.qdrant.recreate_collection(
+        await self.qdrant_client.recreate_collection(
             collection_name=QdrantConstants.COLLECTION_NAME.value,
             vectors_config=VectorParams(
                 size=QdrantConstants.VECTOR_DIM.value,
@@ -72,7 +73,7 @@ class QdrantRepository:
             )
             for idx, doc in enumerate(docs)
         ]
-        await self.qdrant.upsert(
+        await self.qdrant_client.upsert(
             collection_name=QdrantConstants.COLLECTION_NAME.value,
             points=points
         )
@@ -91,7 +92,7 @@ class QdrantRepository:
             List[ScoredPoint]: A list of documents with payloads (content + metadata).
         """
         try:
-            results = await self.qdrant.search(
+            results = await self.qdrant_client.search(
                 collection_name=QdrantConstants.COLLECTION_NAME.value,
                 query_vector=query_vector,
                 limit=limit,
@@ -122,13 +123,13 @@ class QdrantRepository:
             collection_name = QdrantConstants.COLLECTION_NAME.value
 
             # Check if collection exists
-            exists = await self.qdrant.collection_exists(collection_name)
+            exists = await self.qdrant_client.collection_exists(collection_name)
             if not exists:
                 print(f"[INFO] Collection '{collection_name}' not found. Creating it...")
 
                 # Determine vector size from first item
                 vector_size = len(vectors[0]["vector"])
-                await self.qdrant.create_collection(
+                await self.qdrant_client.create_collection(
                     collection_name=collection_name,
                     vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
                 )
@@ -145,7 +146,7 @@ class QdrantRepository:
             ]
 
             # Upsert points
-            await self.qdrant.upsert(
+            await self.qdrant_client.upsert(
                 collection_name=collection_name,
                 points=points
             )

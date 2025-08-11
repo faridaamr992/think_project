@@ -1,38 +1,32 @@
 from qdrant_client import AsyncQdrantClient
-from app.config import settings
 
-
-class QdrantClient():
+class QdrantClient:
     """
-    Asynchronous client manager for connecting to the Qdrant vector database.
+    Lazy async client for Qdrant vector database.
     """
 
-    def __init__(self):
+    def __init__(self, host: str, port: int):
         self._client: AsyncQdrantClient | None = None
+        self._host = host
+        self._port = port
 
-    async def connect(self):
+    def _init_client(self):
+        """Initialize Qdrant client if not already done."""
+        if self._client is None:
+            self._client = AsyncQdrantClient(
+                host=self._host,
+                port=self._port,
+            )
+
+    def get_client(self) :
         """
-        Initializes and connects to the Qdrant database using the provided host and port.
+        Returns the internal Qdrant client instance, lazily initializing it.
         """
-        self._client = AsyncQdrantClient(
-            host=settings.QDRANT_HOST,
-            port=settings.QDRANT_PORT,
-        )
+        self._init_client()
+        return self._client
 
     async def disconnect(self):
-        """
-        Gracefully closes the connection to the Qdrant database.
-        """
+        """Gracefully closes the connection."""
         if self._client:
             await self._client.close()
-
-    def get_client(self) -> AsyncQdrantClient:
-        """
-        Returns the internal Qdrant client instance.
-
-        Raises:
-            RuntimeError: If the client has not been initialized via `connect`.
-        """
-        if not self._client:
-            raise RuntimeError("Qdrant client not connected.")
-        return self._client
+            self._client = None

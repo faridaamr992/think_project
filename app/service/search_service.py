@@ -1,8 +1,8 @@
 from typing import List, Dict
 from app.models.search_schemas import SearchRequest, SearchType
 from app.models.upload_schemas import DocumentRead
-from app.repository.mongo_repository import MongoRepository
-from app.repository.qdrant_repository import QdrantRepository
+from app.repository.db_repository import MongoRepository
+from app.repository.vdb_repository import QdrantRepository
 from app.clients.cohere_client import CohereClient
 import logging
 

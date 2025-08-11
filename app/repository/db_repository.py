@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase, AsyncIOMotorCollection
 from bson.objectid import ObjectId
 from typing import Optional, List, Dict, Any
-
+from app.clients.mongo_client import MongoClient
 from app.constant_manager import MongoConstants
 from app.models.upload_schemas import DocumentCreate, DocumentRead, DocumentUpdate
 
@@ -14,16 +14,17 @@ class MongoRepository:
     execute full-text search, and manage collections such as listing and dropping.
     """
 
-    def __init__(self, db: AsyncIOMotorDatabase):
+    def __init__(self, client: MongoClient):
         """
         Initialize the repository with a MongoDB database instance.
 
         Args:
-            db (AsyncIOMotorDatabase): The MongoDB database instance.
+            client(MongoClient): Costum Wrapper.
         """
-        self._db = db
-        self._collection: AsyncIOMotorCollection = db[MongoConstants.COLLECTION_NAME]
+        self._db = client.get_client()  
+        self._collection = self._db[MongoConstants.COLLECTION_NAME]
 
+        
     # ----------------------------
     # Document-level operations
     # ----------------------------

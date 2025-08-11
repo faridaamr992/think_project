@@ -44,7 +44,7 @@ Set your envirnment variables in the `.env` file like `LLM_API_KEY` value.
 ## Run the FastAPI server 
 
 ```bash
-$ uvicorn main:app --reload --host 0.0.0.0
+$ uvicorn app.main:app --reload --host 0.0.0.0
 ```
 
 ## Run Docker Compose Services
