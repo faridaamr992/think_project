@@ -3,7 +3,8 @@ from app.models.search_schemas import SearchRequest, SearchType
 from app.models.upload_schemas import DocumentRead
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
-from app.clients.cohere_client import CohereClient
+from app.clients.embedding_client import EmbeddingClient
+from app.constant_manager import CohereConstants
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,11 +18,11 @@ class SearchService:
         self,
         mongo_repo: MongoRepository,
         qdrant_repo: QdrantRepository,
-        cohere_client: CohereClient
+        embedding_client: EmbeddingClient
     ):
         self.mongo_repo = mongo_repo
         self.qdrant_repo = qdrant_repo
-        self.cohere_client = cohere_client
+        self.embedding_client = embedding_client
 
     def chunk_document(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
         """Split document into overlapping chunks."""
@@ -75,7 +76,8 @@ class SearchService:
                 logger.debug(f"[SEARCH] Performing semantic search for: {request.query}")
                 
                 # Generate query embedding
-                embeddings = await self.cohere_client.embed_texts([request.query])
+                embeddings = await self.embedding_client.embed_texts([request.query],
+                                                                     model_name= CohereConstants.MODEL_NAME.value, input_type= CohereConstants.INPUT_TYPE.value)
                 if not embeddings or not embeddings[0]:
                     raise ValueError("Failed to generate embeddings for query.")
                 

@@ -3,19 +3,19 @@ from app.config import settings
 from app.constant_manager import CohereConstants
 
 
-class CohereClient():
+class EmbeddingClient():
     """
-    Wrapper for the Cohere client to generate text embeddings.
+    Wrapper for the Embedding client to generate text embeddings.
     """
 
     def __init__(self,api_key):
         """
-        Initializes the Cohere client using the API key from environment settings.
+        Initializes the Embedding client using the API key from environment settings.
         """
         self.api_key=api_key
         self._client = cohere.Client(api_key=self.api_key)
 
-    async def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    async def embed_texts(self, texts: list[str],model_name,input_type) -> list[list[float]]:
         """
         Generates embeddings for a list of input texts.
 
@@ -27,7 +27,7 @@ class CohereClient():
         """
         response = self._client.embed(
             texts=texts,
-            model=CohereConstants.MODEL_NAME.value,
-            input_type=CohereConstants.INPUT_TYPE.value,
+            model=model_name,
+            input_type=input_type,
         )
         return response.embeddings

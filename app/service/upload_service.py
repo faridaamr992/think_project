@@ -2,7 +2,7 @@ from typing import Optional
 from app.models.upload_schemas import DocumentCreate, UploadSchema
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
-from app.clients.cohere_client import CohereClient
+from app.clients.embedding_client import EmbeddingClient
 from app.utils.chunking import simple_chunk_text
 from uuid import uuid4
 import json
@@ -11,7 +11,7 @@ from typing import Optional
 from fastapi import UploadFile, HTTPException
 from app.models.upload_schemas import DocumentCreate
 from app.utils.chunking import simple_chunk_text
-
+from constant_manager import CohereConstants
 
 
 class UploadService:
@@ -19,11 +19,11 @@ class UploadService:
         self,
         mongo_repo: MongoRepository,
         qdrant_repo: QdrantRepository,
-        cohere_client: CohereClient
+        embedding_client: EmbeddingClient
     ):
         self.mongo_repo = mongo_repo
         self.qdrant_repo = qdrant_repo
-        self.cohere_client = cohere_client
+        self.embedding_client = embedding_client
 
     async def prepare_document(self, file: UploadFile, metadata: Optional[str]) -> DocumentCreate:
         """Read file, validate, parse metadata, and return DocumentCreate."""
@@ -87,7 +87,8 @@ class UploadService:
             print(f"[DEBUG] Created {len(chunks)} chunks from document")
 
             # Step 3: Generate embeddings for all chunks
-            vectors = await self.cohere_client.embed_texts(chunks)
+            vectors = await self.embedding_client.embed_texts(chunks,
+                                                              model_name= CohereConstants.MODEL_NAME.value, input_type= CohereConstants.INPUT_TYPE.value)
             print("*****************************step3")
             print(f"[DEBUG] Generated {len(vectors)} embeddings")
 
