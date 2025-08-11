@@ -64,33 +64,37 @@ class SearchService:
 
    
 
-    async def search(self, request: SearchRequest) -> List[DocumentRead]:
+    async def search(self, request: SearchRequest, user_id: str) -> List[DocumentRead]:
         """
         Perform semantic or full-text search based on the request type.
-        Optionally filter by file_id.
+        Filters by internal user_id and optionally by file_id from request.
         """
-        file_filter: Optional[dict] = None
+
+        mongo_filter = {"metadata.user_id": str(user_id)}
+        qdrant_filter = {"metadata.user_id": str(user_id)}
+
         if request.file_id:
-            try:
-                file_filter = {"file_id": request.file_id}
-            except Exception:
-                raise ValueError(f"Invalid file_id format: {request.file_id}")
+            if request.search_type == SearchType.FULL_TEXT:
+                mongo_filter["metadata.file_id"] = str(request.file_id)
+            elif request.search_type == SearchType.SEMANTIC:
+                qdrant_filter["file_id"] = str(request.file_id)
+                    
+         
 
         if request.search_type == SearchType.FULL_TEXT:
-            logger.debug(f"[SEARCH] Performing full-text search for: {request.query}")
-            file_filter = None
-            if request.file_id:
-                file_filter = {"metadata.file_id": request.file_id}
+            #logger.debug(f"[SEARCH] Performing full-text search for: {request.query} with filters: {filters}")
+
             return await self.mongo_repo.full_text_search(
                 query=request.query,
                 top_k=request.top_k,
-                file_filter=file_filter
+                file_filter=mongo_filter
             )
 
         elif request.search_type == SearchType.SEMANTIC:
             try:
-                logger.debug(f"[SEARCH] Performing semantic search for: {request.query}")
-                
+                #logger.debug(f"[SEARCH] Performing semantic search for: {request.query} with filters: {filters}")
+                logger.debug(f"Qdrant search filter: {qdrant_filter}")
+                print(qdrant_filter)
                 embeddings = await self.embedding_client.embed_texts(
                     [request.query],
                     model_name=CohereConstants.MODEL_NAME.value,
@@ -102,15 +106,14 @@ class SearchService:
                 embedding = embeddings[0]
                 logger.debug(f"[SEARCH] Generated embedding length: {len(embedding)}")
 
-                print(f"[DEBUG] file_filter passed to Qdrant search: {file_filter}")
-
-                
                 results = await self.qdrant_repo.search(
                     query_vector=embedding,
                     limit=request.top_k,
-                    file_filter=file_filter  # pass filter to Qdrant
+                    file_filter=qdrant_filter
                 )
-                logger.debug(f"[SEARCH] Found {len(results)} results")
+                print(results)
+                logger.debug(f"Qdrant raw results: {results}")
+                
 
                 documents = []
                 for idx, result in enumerate(results):

@@ -72,67 +72,55 @@ class UploadService:
             }
         )
 
-    async def upload_document(self, doc: DocumentCreate):
+    async def upload_document(self, doc: DocumentCreate, user_id: str):
         try:
-            #create index
             await self.mongo_repo.create_text_index()
-            # Step 1: Generate document ID and get metadata
             document_id = str(uuid4())
             title = doc.metadata.get("title") or doc.metadata.get("filename") or "Untitled"
             file_name = doc.metadata.get("filename") or "unknown_filename.ext"
-            print("*****************************step1")
 
-            # Step 2: Chunk text
             chunks = simple_chunk_text(doc.content)
-            print("*****************************step2")
-            print(f"[DEBUG] Created {len(chunks)} chunks from document")
+            vectors = await self.embedding_client.embed_texts(
+                chunks,
+                model_name=CohereConstants.MODEL_NAME.value,
+                input_type=CohereConstants.INPUT_TYPE.value
+            )
 
-            # Step 3: Generate embeddings for all chunks
-            vectors = await self.embedding_client.embed_texts(chunks,
-                                                              model_name= CohereConstants.MODEL_NAME.value, input_type= CohereConstants.INPUT_TYPE.value)
-            print("*****************************step3")
-            print(f"[DEBUG] Generated {len(vectors)} embeddings")
-
-            # Step 4: Prepare documents for MongoDB and Qdrant
             documents_to_insert = []
             embeddings_to_insert = []
 
             for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
                 chunk_id = str(uuid4())
 
-                # MongoDB document
                 documents_to_insert.append({
-                            "content": chunk,
-                            "metadata": {
-                                "title": title,
-                                "filename": file_name,
-                                "chunk_index": i,
-                                "document_id": document_id,
-                                "file_id": document_id  
-                            }
-                        })
+                    "content": chunk,
+                    "metadata": {
+                        "title": title,
+                        "filename": file_name,
+                        "chunk_index": i,
+                        "document_id": document_id,
+                        "file_id": document_id,
+                        "user_id": user_id  # <-- Add user_id here
+                    }
+                })
 
-                # Qdrant point - THIS IS THE KEY CHANGE
                 embeddings_to_insert.append({
-                            "id": chunk_id,
-                            "vector": vector,
-                            "payload": {
-                                "file_id": document_id,     # Top-level key
-                                "content": chunk,
-                                "metadata": {
-                                    "title": title,
-                                    "filename": file_name,
-                                    "chunk_index": i,
-                                    "document_id": document_id,
-                                }
-                            }
-                        })
+                    "id": chunk_id,
+                    "vector": vector,
+                    "payload": {
+                        "file_id": document_id,
+                        "content": chunk,
+                        "metadata": {
+                            "title": title,
+                            "filename": file_name,
+                            "chunk_index": i,
+                            "document_id": document_id,
+                            "user_id": user_id  # <-- Add user_id here as well
+                        }
+                    }
+                })
 
-
-            # Insert into MongoDB
             await self.mongo_repo.insert_many(documents_to_insert)
-            
-            # Insert into Qdrant
             await self.qdrant_repo.insert_many(embeddings_to_insert)
 
             return {

@@ -1,14 +1,17 @@
-from fastapi import UploadFile, File, Form, APIRouter, HTTPException
+from fastapi import UploadFile, File, Form, APIRouter, HTTPException,Depends
 from typing import Optional
 import logging
 from app.container import container
+from app.models.get_user_schemas import UserSchema
+from app.utils.auth_dependcies import get_current_user
 
 router = APIRouter()
 
-@router.post("/", status_code=201)
+@router.post("/upload", status_code=201)
 async def upload_file(
     file: UploadFile = File(...),
     metadata: Optional[str] = Form(None),
+    current_user: UserSchema = Depends(get_current_user)
 ):
     """
     Upload a file. Service handles both validation and storage.
@@ -18,7 +21,7 @@ async def upload_file(
         document = await container.upload_service.prepare_document(file, metadata)
 
         # Step 2: Upload to Mongo & Qdrant
-        details = await container.upload_service.upload_document(document)
+        details = await container.upload_service.upload_document(document, user_id=str(current_user.id))
 
         return {
             "message": "File uploaded successfully",
