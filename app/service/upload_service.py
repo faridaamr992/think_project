@@ -6,11 +6,9 @@ from app.clients.embedding_client import EmbeddingClient
 from app.utils.chunking import simple_chunk_text
 from uuid import uuid4
 import json
-from uuid import uuid4
 from typing import Optional
 from fastapi import UploadFile, HTTPException
 from app.models.upload_schemas import DocumentCreate
-from app.utils.chunking import simple_chunk_text
 from app.constant_manager import CohereConstants
 
 
