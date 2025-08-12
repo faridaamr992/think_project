@@ -71,7 +71,7 @@ class SearchService:
         """
 
         mongo_filter = {"metadata.user_id": str(user_id)}
-        qdrant_filter = {"metadata.user_id": str(user_id)}
+        qdrant_filter = {"user_id": str(user_id)}
 
         if request.file_id:
             if request.search_type == SearchType.FULL_TEXT:

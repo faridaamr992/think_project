@@ -115,7 +115,8 @@ class UploadService:
                             "filename": file_name,
                             "chunk_index": i,
                             "document_id": document_id,
-                            "user_id": user_id  # <-- Add user_id here as well
+                            "file_id": document_id,
+                            "user_id": user_id  
                         }
                     }
                 })
