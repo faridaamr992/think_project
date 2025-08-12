@@ -11,3 +11,6 @@ class AuthRepository:
 
     async def create_user(self, user_data: dict):
         await self.collection.insert_one(user_data)
+
+    async def get_user_by_email(self, email: str):
+        return await self.collection.find_one({"email": email})
