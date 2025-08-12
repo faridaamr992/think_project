@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 from bson import ObjectId
-from app.models.search_schemas import SearchRequest, SearchType
-from app.models.upload_schemas import DocumentRead
+from app.schemas.search_schemas import SearchRequest, SearchType
+from app.schemas.upload_schemas import DocumentRead
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
 from app.clients.embedding_client import EmbeddingClient

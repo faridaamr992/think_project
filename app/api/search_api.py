@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from app.models.search_schemas import SearchRequest
-from app.models.upload_schemas import DocumentRead
+from app.schemas.search_schemas import SearchRequest
+from app.schemas.upload_schemas import DocumentRead
 from app.container import container
 from app.utils.auth_dependcies import get_current_user  # adjust import path
 

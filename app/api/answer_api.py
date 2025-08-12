@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.models.answer_schemas import AnswerRequest, AnswerResponse
+from app.schemas.answer_schemas import AnswerRequest, AnswerResponse
 from app.utils.auth_dependcies import get_current_user  # adjust import path as needed
 from app.container import container
 

@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
 from app.utils.jwt_handler import verify_token
 from app.container import container
-from app.models.get_user_schemas import UserSchema
+from app.schemas.get_user_schemas import UserSchema
 
 security = HTTPBearer()
 

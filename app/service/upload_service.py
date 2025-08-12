@@ -1,5 +1,5 @@
 from typing import Optional
-from app.models.upload_schemas import DocumentCreate, UploadSchema
+from app.schemas.upload_schemas import DocumentCreate, UploadSchema
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
 from app.clients.embedding_client import EmbeddingClient
@@ -8,7 +8,7 @@ from uuid import uuid4
 import json
 from typing import Optional
 from fastapi import UploadFile, HTTPException
-from app.models.upload_schemas import DocumentCreate
+from app.schemas.upload_schemas import DocumentCreate
 from app.constant_manager import CohereConstants
 
 

@@ -2,7 +2,7 @@ from typing import List,Dict
 from qdrant_client.models import Distance, VectorParams, PointStruct, Filter
 from app.clients.qdrant_client import QdrantClient
 from qdrant_client import AsyncQdrantClient
-from app.models.upload_schemas import UploadSchema
+from app.schemas.upload_schemas import UploadSchema
 from app.constant_manager import QdrantConstants
 from app.utils.chunking import simple_chunk_text
 from qdrant_client.models import ScoredPoint

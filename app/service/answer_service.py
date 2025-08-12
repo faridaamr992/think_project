@@ -1,10 +1,10 @@
 from app.service.search_service import SearchService
 from app.clients.llm_client import LLMClient
 from app.utils.prompt_builder import build_rag_prompt
-from app.models.answer_schemas import AnswerRequest, AnswerResponse, RetrievedDocument
+from app.schemas.answer_schemas import AnswerRequest, AnswerResponse, RetrievedDocument
 from app.constant_manager import CohereConstants
-from app.models.search_schemas import SearchRequest
-from app.models.get_user_schemas import UserSchema
+from app.schemas.search_schemas import SearchRequest
+from app.schemas.get_user_schemas import UserSchema
 class AnswerService:
     def __init__(self, search_service: SearchService, llm_client: LLMClient):
         self.search_service = search_service

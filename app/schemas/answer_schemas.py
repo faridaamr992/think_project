@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from app.models.search_schemas import SearchType
+from app.schemas.search_schemas import SearchType
 
 class AnswerRequest(BaseModel):
     query: str
