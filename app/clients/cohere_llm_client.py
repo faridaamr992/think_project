@@ -1,13 +1,14 @@
 import cohere
+from app.domain.interfaces.llm_client_interface import ILLMClient
 from app.config import settings
 
-class LLMClient:
-    def __init__(self, api_key):
+class CohereLLMClient(ILLMClient):
+    def __init__(self, api_key, model: str):
         self.client = cohere.Client(api_key=api_key)
-
-    async def generate_answer(self, prompt: str, model):
+        self.model = model
+    async def generate_answer(self, prompt: str):
         response = self.client.chat(
-            model=model,
+            model=self.model,
             message=prompt,
             max_tokens=500,
             temperature=0.3

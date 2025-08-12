@@ -16,3 +16,8 @@ class CohereConstants(str,Enum):
     MODEL_LLM_NAME = "command-r"
     INPUT_TYPE= "search_document"
     VECTOR_SIZE = 1024
+
+class MistralConstants(str,Enum):
+    MODEL_LLM_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
+    INPUT_TYPE= "search_document"
+    

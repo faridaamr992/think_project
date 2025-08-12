@@ -7,6 +7,7 @@ class AnswerRequest(BaseModel):
     search_type: SearchType
     top_k: Optional[int] = 5
     file_id: Optional[str] = None
+    provider: Optional[str] = None
 
 class RetrievedDocument(BaseModel):
     id: str

@@ -98,7 +98,7 @@ class SearchService:
                 embeddings = await self.embedding_client.embed_texts(
                     [request.query],
                     model_name=CohereConstants.MODEL_NAME.value,
-                    input_type=CohereConstants.INPUT_TYPE.value
+                    input_type="search_query"
                 )
                 if not embeddings or not embeddings[0]:
                     raise ValueError("Failed to generate embeddings for query.")
