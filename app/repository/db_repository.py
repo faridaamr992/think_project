@@ -126,8 +126,13 @@ class MongoRepository:
         except Exception as e:
             raise Exception(f"Mongo insert_many failed: {e}")
         
-    async def list_documents(self):
+    async def list_documents(self, user_id: str):
         pipeline = [
+            {
+                "$match": {
+                    "metadata.user_id": user_id
+                }
+            },
             {
                 "$group": {
                     "_id": "$metadata.document_id",

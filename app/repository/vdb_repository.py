@@ -84,16 +84,21 @@ class QdrantRepository:
     async def search(self, query_vector: List[float], limit: int = 5, file_filter: dict = None) -> List[ScoredPoint]:
         """
         Performs a semantic search in the Qdrant collection using the query vector,
-        optionally filtering by file_id.
+        optionally filtering by user_id, file_id, etc.
         """
         try:
             query_filter = None
             if file_filter:
-                query_filter = {
-                    "must": [
-                        {"key": "metadata.file_id", "match": {"value": str(file_filter["file_id"])}}
-                    ]
-                }
+                must_conditions = []
+                for key, value in file_filter.items():
+                    # Prefix with 'metadata.' to match stored payload keys
+                    qdrant_key = f"metadata.{key}"
+                    must_conditions.append({
+                        "key": qdrant_key,
+                        "match": {"value": str(value)}  # Qdrant expects string values for matching
+                    })
+                query_filter = {"must": must_conditions}
+                print(f"Qdrant query_filter: {query_filter}")
 
             results = await self.qdrant_client.search(
                 collection_name=QdrantConstants.COLLECTION_NAME.value,
@@ -106,7 +111,6 @@ class QdrantRepository:
 
         except Exception as e:
             raise Exception(f"Qdrant search failed: {str(e)}")
-
 
 
     async def insert_many(self, vectors: List[Dict]):

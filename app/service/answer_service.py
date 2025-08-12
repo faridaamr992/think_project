@@ -4,23 +4,25 @@ from app.utils.prompt_builder import build_rag_prompt
 from app.models.answer_schemas import AnswerRequest, AnswerResponse, RetrievedDocument
 from app.constant_manager import CohereConstants
 from app.models.search_schemas import SearchRequest
+from app.models.get_user_schemas import UserSchema
 class AnswerService:
     def __init__(self, search_service: SearchService, llm_client: LLMClient):
         self.search_service = search_service
         self.llm_client = llm_client
 
-    async def get_answer(self, request: AnswerRequest) -> AnswerResponse:
+    async def get_answer(self, request: AnswerRequest, current_user: UserSchema) -> AnswerResponse:
+
         # Step 1: Build a SearchRequest object from AnswerRequest
         search_request = SearchRequest(
             query=request.query,
             search_type=request.search_type,
             top_k=request.top_k,
-            file_id=request.file_id
+            file_id=request.file_id, user_id=current_user.id
         )
 
         # Step 2: Retrieve documents using SearchService
-        docs = await self.search_service.search(search_request)
-
+        docs = await self.search_service.search(search_request, user_id=current_user.id)
+        
         if not docs:
             return {
                 "answer": "I don't know",
