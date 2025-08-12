@@ -1,12 +1,17 @@
 import asyncio
 from app.clients.mongo_client import MongoClient
 from app.clients.qdrant_client import QdrantClient
-from app.clients.cohere_client import CohereClient
+from app.clients.embedding_client import EmbeddingClient
+from app.clients.llm_client import LLMClient
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
 from app.constant_manager import MongoConstants
 from app.service.upload_service import UploadService
 from app.service.search_service import SearchService
+from app.repository.auth_repository import AuthRepository
+from app.service.register_service import RegisterService
+from app.service.login_service import LoginService
+from app.service.answer_service import AnswerService
 from app.config import settings
 
 class Container:
@@ -17,11 +22,13 @@ class Container:
             host=settings.QDRANT_HOST,
             port=settings.QDRANT_PORT
         )
-        self.cohere_client = CohereClient(api_key=settings.COHERE_API_KEY)
+        self.embedding_client = EmbeddingClient(api_key=settings.COHERE_API_KEY)
+        self.llm_client = LLMClient(api_key=settings.COHERE_API_KEY)  
+
 
         # Repositories
         self.mongo_repo = MongoRepository(
-            self.mongo_client
+            self.mongo_client,collection_name=MongoConstants.COLLECTION_NAME.value
         )
         self.qdrant_repo = QdrantRepository(
             self.qdrant_client.get_client()
@@ -29,11 +36,18 @@ class Container:
 
         # Services
         self.upload_service = UploadService(
-            self.mongo_repo, self.qdrant_repo, self.cohere_client
+            self.mongo_repo, self.qdrant_repo, self.embedding_client
         )
         self.search_service = SearchService(
-            self.mongo_repo, self.qdrant_repo, self.cohere_client
+            self.mongo_repo, self.qdrant_repo, self.embedding_client
         )
+        self.answer_service = AnswerService( 
+            self.search_service, self.llm_client
+        )
+
+        self.auth_repo = AuthRepository(self.mongo_client)
+        self.register_service = RegisterService(self.auth_repo)
+        self.login_service = LoginService(self.auth_repo)
 
 
 container = Container()

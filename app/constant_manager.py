@@ -13,5 +13,6 @@ class QdrantConstants(str, Enum):
 
 class CohereConstants(str,Enum):
     MODEL_NAME="embed-english-v3.0"
+    MODEL_LLM_NAME = "command-r"
     INPUT_TYPE= "search_document"
     VECTOR_SIZE = 1024

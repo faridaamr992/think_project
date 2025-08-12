@@ -21,3 +21,4 @@ class SearchRequest(BaseModel):
     search_type: SearchType = Field(..., example="semantic")
     top_k: Optional[int] = Field(default=5, example=5)
     return_full_documents: bool = False
+    file_id: Optional[str] = None

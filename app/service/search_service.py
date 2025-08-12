@@ -1,9 +1,11 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
+from bson import ObjectId
 from app.models.search_schemas import SearchRequest, SearchType
 from app.models.upload_schemas import DocumentRead
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
-from app.clients.cohere_client import CohereClient
+from app.clients.embedding_client import EmbeddingClient
+from app.constant_manager import CohereConstants
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,11 +19,11 @@ class SearchService:
         self,
         mongo_repo: MongoRepository,
         qdrant_repo: QdrantRepository,
-        cohere_client: CohereClient
+        embedding_client: EmbeddingClient
     ):
         self.mongo_repo = mongo_repo
         self.qdrant_repo = qdrant_repo
-        self.cohere_client = cohere_client
+        self.embedding_client = embedding_client
 
     def chunk_document(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
         """Split document into overlapping chunks."""
@@ -65,39 +67,57 @@ class SearchService:
     async def search(self, request: SearchRequest) -> List[DocumentRead]:
         """
         Perform semantic or full-text search based on the request type.
+        Optionally filter by file_id.
         """
+        file_filter: Optional[dict] = None
+        if request.file_id:
+            try:
+                file_filter = {"file_id": request.file_id}
+            except Exception:
+                raise ValueError(f"Invalid file_id format: {request.file_id}")
+
         if request.search_type == SearchType.FULL_TEXT:
             logger.debug(f"[SEARCH] Performing full-text search for: {request.query}")
-            return await self.mongo_repo.full_text_search(request.query, request.top_k)
+            file_filter = None
+            if request.file_id:
+                file_filter = {"metadata.file_id": request.file_id}
+            return await self.mongo_repo.full_text_search(
+                query=request.query,
+                top_k=request.top_k,
+                file_filter=file_filter
+            )
 
         elif request.search_type == SearchType.SEMANTIC:
             try:
                 logger.debug(f"[SEARCH] Performing semantic search for: {request.query}")
                 
-                # Generate query embedding
-                embeddings = await self.cohere_client.embed_texts([request.query])
+                embeddings = await self.embedding_client.embed_texts(
+                    [request.query],
+                    model_name=CohereConstants.MODEL_NAME.value,
+                    input_type=CohereConstants.INPUT_TYPE.value
+                )
                 if not embeddings or not embeddings[0]:
                     raise ValueError("Failed to generate embeddings for query.")
                 
                 embedding = embeddings[0]
                 logger.debug(f"[SEARCH] Generated embedding length: {len(embedding)}")
+
+                print(f"[DEBUG] file_filter passed to Qdrant search: {file_filter}")
+
                 
-                # Perform vector search
                 results = await self.qdrant_repo.search(
                     query_vector=embedding,
-                    limit=request.top_k
+                    limit=request.top_k,
+                    file_filter=file_filter  # pass filter to Qdrant
                 )
                 logger.debug(f"[SEARCH] Found {len(results)} results")
 
-                # Process results
                 documents = []
                 for idx, result in enumerate(results):
                     try:
-                        # Extract payload
                         payload = result.payload or {}
                         logger.debug(f"[SEARCH] Processing result {idx + 1} payload: {payload}")
                         
-                        # Extract content and metadata
                         content = payload.get("content")
                         metadata = payload.get("metadata", {})
                         
@@ -105,7 +125,6 @@ class SearchService:
                             logger.warning(f"[SEARCH] No content found in result {idx + 1}")
                             continue
                         
-                        # Create document
                         doc = DocumentRead(
                             _id=str(result.id),
                             content=content.strip(),
