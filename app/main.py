@@ -10,7 +10,7 @@ from app.utils.auth_dependcies import get_current_user
 
 #Init the app
 app = FastAPI(title="Hybrid Search API")
-
+print("CICD DONE!!")
 # Include upload route
 app.include_router(upload_router, prefix="/upload", tags=["Upload"],dependencies=[Depends(get_current_user)])
 
