@@ -2,7 +2,7 @@ from fastapi import UploadFile, File, Form, APIRouter, HTTPException,Depends
 from typing import Optional
 import logging
 from app.container import container
-from app.models.get_user_schemas import UserSchema
+from app.schemas.get_user_schemas import UserSchema
 from app.utils.auth_dependcies import get_current_user
 
 router = APIRouter()

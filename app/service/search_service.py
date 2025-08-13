@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 from bson import ObjectId
-from app.models.search_schemas import SearchRequest, SearchType
-from app.models.upload_schemas import DocumentRead
+from app.schemas.search_schemas import SearchRequest, SearchType
+from app.schemas.upload_schemas import DocumentRead
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
 from app.clients.embedding_client import EmbeddingClient
@@ -98,7 +98,7 @@ class SearchService:
                 embeddings = await self.embedding_client.embed_texts(
                     [request.query],
                     model_name=CohereConstants.MODEL_NAME.value,
-                    input_type=CohereConstants.INPUT_TYPE.value
+                    input_type="search_query"
                 )
                 if not embeddings or not embeddings[0]:
                     raise ValueError("Failed to generate embeddings for query.")

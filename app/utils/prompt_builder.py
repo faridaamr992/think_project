@@ -1,5 +1,5 @@
 from typing import List
-from app.models.answer_schemas import RetrievedDocument
+from app.schemas.answer_schemas import RetrievedDocument
 
 def build_rag_prompt(query: str, docs: List[RetrievedDocument]) -> str:
     context_text = "\n\n".join(

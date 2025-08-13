@@ -3,7 +3,7 @@ from bson.objectid import ObjectId
 from typing import Optional, List, Dict, Any
 from app.clients.mongo_client import MongoClient
 from app.constant_manager import MongoConstants
-from app.models.upload_schemas import DocumentCreate, DocumentRead, DocumentUpdate
+from app.schemas.upload_schemas import DocumentCreate, DocumentRead, DocumentUpdate
 
 
 class MongoRepository:

@@ -2,7 +2,7 @@ import asyncio
 from app.clients.mongo_client import MongoClient
 from app.clients.qdrant_client import QdrantClient
 from app.clients.embedding_client import EmbeddingClient
-from app.clients.llm_client import LLMClient
+from app.domain.factories.llm_factory import LLMFactory
 from app.repository.db_repository import MongoRepository
 from app.repository.vdb_repository import QdrantRepository
 from app.constant_manager import MongoConstants
@@ -23,7 +23,7 @@ class Container:
             port=settings.QDRANT_PORT
         )
         self.embedding_client = EmbeddingClient(api_key=settings.COHERE_API_KEY)
-        self.llm_client = LLMClient(api_key=settings.COHERE_API_KEY)  
+        self.llm_client = LLMFactory.create()  
 
 
         # Repositories

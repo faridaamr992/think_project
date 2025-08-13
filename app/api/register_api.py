@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.models.register_schemas import UserRegister
+from app.schemas.register_schemas import UserRegister
 from app.container import container
 
 router = APIRouter()
