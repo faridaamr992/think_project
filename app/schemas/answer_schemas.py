@@ -8,12 +8,16 @@ class AnswerRequest(BaseModel):
     top_k: Optional[int] = 5
     file_id: Optional[str] = None
     provider: Optional[str] = None
+    session_id: Optional[str] = None
 
 class RetrievedDocument(BaseModel):
     id: str
     content: str
     score: float
 
+
 class AnswerResponse(BaseModel):
     answer: str
     context: List[RetrievedDocument]
+    history: List[dict]
+    session_id: str

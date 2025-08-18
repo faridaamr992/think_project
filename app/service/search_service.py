@@ -94,7 +94,7 @@ class SearchService:
             try:
                 #logger.debug(f"[SEARCH] Performing semantic search for: {request.query} with filters: {filters}")
                 logger.debug(f"Qdrant search filter: {qdrant_filter}")
-                print(qdrant_filter)
+                #print(qdrant_filter)
                 embeddings = await self.embedding_client.embed_texts(
                     [request.query],
                     model_name=CohereConstants.MODEL_NAME.value,
@@ -111,7 +111,7 @@ class SearchService:
                     limit=request.top_k,
                     file_filter=qdrant_filter
                 )
-                print(results)
+                #print(results)
                 logger.debug(f"Qdrant raw results: {results}")
                 
 

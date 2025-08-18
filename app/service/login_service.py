@@ -8,6 +8,9 @@ class LoginService:
 
     async def login_user(self, username: str, password: str):
         user = await self.auth_repo.get_user_by_username(username)
+        print(f"Trying to log in {username} with password {password}")
+        print("Fetched user:", user)
+
         if not user or not verify_password(password, user.get("hashed_password", "")):
             raise HTTPException(status_code=400, detail="Invalid username or password")
 

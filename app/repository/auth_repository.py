@@ -3,7 +3,6 @@ from app.clients.mongo_client import MongoClient
 class AuthRepository:
     def __init__(self, client: MongoClient):
         self._db = client.get_client()  
-        
         self.collection = self._db.get_collection("users")
 
     async def get_user_by_username(self, username: str):
