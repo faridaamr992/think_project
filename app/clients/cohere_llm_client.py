@@ -11,6 +11,6 @@ class CohereLLMClient(ILLMClient):
             model=self.model,
             message=prompt,
             max_tokens=500,
-            temperature=0.3
+            temperature=0.1
         )
         return response.text.strip()

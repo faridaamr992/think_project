@@ -10,9 +10,9 @@ def simple_chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> Li
         end = start + chunk_size
 
         if end < text_length:
-            last_period = text[start:end].rfind('.')
-            last_newline = text[start:end].rfind('\n')
-            break_point = max(last_period, last_newline)
+            break_chars = ['.', '\n', '؟', '!']
+            break_points = [text[start:end].rfind(ch) for ch in break_chars]
+            break_point = max(break_points)
 
             if break_point != -1:
                 end = start + break_point + 1
@@ -24,7 +24,6 @@ def simple_chunk_text(text: str, chunk_size: int = 500, overlap: int = 50) -> Li
             chunks.append(chunk)
 
         if end <= start:
-            # Prevent infinite loop
             break
 
         start = end - overlap if end - overlap > start else end
