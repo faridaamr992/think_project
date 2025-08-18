@@ -2,6 +2,7 @@ from fastapi import UploadFile, File, Form, APIRouter, HTTPException,Depends
 from typing import Optional
 import logging
 from app.container import container
+from app.container import Container
 from app.schemas.get_user_schemas import UserSchema
 from app.utils.auth_dependcies import get_current_user
 
@@ -33,3 +34,19 @@ async def upload_file(
     except Exception as e:
         logging.error(f"Upload failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+    
+@router.get("/fetch")
+async def list_files(
+    container: Container = Depends(Container),
+    current_user: UserSchema = Depends(get_current_user)
+):
+    try:
+        files = await container.mongo_repo.list_documents(user_id=str(current_user.id))
+        return {
+            "files": [
+                {"id": f["id"], "name": f["name"]}
+                for f in files
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
